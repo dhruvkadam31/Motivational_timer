@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Timer</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: black;
+            color: gold;
+            padding: 20px;
+            transition: background 2s linear;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+        }
+        .timer {
+            font-size: 180px;
+            font-weight: bold;
+            padding: 20px;
+            color: gold;
+        }
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            margin: 20px auto;
+        }
+        .progress-line {
+            width: 0%;
+            height: 100%;
+            background-color: gold;
+            position: absolute;
+            left: 0;
+            transition: width 1s linear;
+        }
+        .quote-block {
+            font-size: 20px;
+            font-style: italic;
+            margin-top: 20px;
+            padding: 15px;
+            background: #222;
+            border: 1px solid gold;
+            border-radius: 10px;
+            display: none;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            width: 40px;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid gold;
+            background: #222;
+            color: gold;
+            text-align: center;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #222;
+            color: gold;
+            padding: 12px 24px;
+            border: 2px solid gold;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.4s ease-in-out;
+        }
+        button:hover {
+            background-color: gold;
+            color: black;
+            box-shadow: 0px 0px 20px gold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Premium Timer</h1>
+        
+        <div class="input-group">
+            <label for="minutes">Minutes:</label>
+	<br/><br/>	
+            <input type="number" id="minutes" value="1" min="0">
+            <label for="seconds">Seconds:</label>
+	<br/><br/>
+            <input type="number" id="seconds" value="0" min="0">
+        </div>
+
+        <div class="controls">
+            <button onclick="startTimer()">Start</button>
+            <button onclick="toggleTimer()" id="pauseResume">Pause</button>
+        </div>
+
+        <div class="timer" id="timer">00:00</div>
+        <div class="progress-container">
+            <div class="progress-line" id="progress"></div>
+        </div>
+
+        <button onclick="fetchQuote()">Feeling Bored? Get Motivation!</button>
+        <div id="quote" class="quote-block"></div>
+    </div>
+
+    <script>
+        let interval;
+        let paused = false;
+        let remainingTime;
+
+        function startTimer() {
+            clearInterval(interval);
+            let m = parseInt(document.getElementById("minutes").value);
+            let s = parseInt(document.getElementById("seconds").value);
+            remainingTime = (m * 60) + s;
+            let totalTime = remainingTime;
+
+            const display = document.getElementById("timer");
+            const progress = document.getElementById("progress");
+            const body = document.body;
+
+            body.style.background = "#444"; 
+
+            function updateTimer() {
+                if (!paused && remainingTime >= 0) {
+                    let minutes = Math.floor(remainingTime / 60);
+                    let seconds = remainingTime % 60;
+                    display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                    let percentage = ((totalTime - remainingTime) / totalTime) * 100;
+                    progress.style.width = `${percentage}%`;
+
+                    let colorStep = Math.floor((totalTime - remainingTime) / totalTime * 255);
+                    body.style.background = `rgb(${colorStep}, 50, 50)`;
+
+                    if (remainingTime === 0) {
+                        clearInterval(interval);
+                        triggerSplashEffect();
+                        fetchQuote();
+                    }
+
+                    remainingTime--; // Ensures `00:00` is displayed before stopping
+                }
+            }
+
+            interval = setInterval(updateTimer, 1000);
+        }
+
+        function toggleTimer() {
+            paused = !paused;
+            document.getElementById("pauseResume").textContent = paused ? "Resume" : "Pause";
+        }
+
+        function triggerSplashEffect() {
+            const body = document.body;
+            body.style.background = "red"; 
+            setTimeout(() => {
+                body.style.transition = "background 2s ease-in-out"; 
+                body.style.background = "black"; 
+            }, 500);
+        }
+
+        async function fetchQuote() {
+            try {
+                const response = await fetch("https://quotes-api-self.vercel.app/quote"); 
+                const data = await response.json();
+                document.getElementById("quote").textContent = data.quote || "Wisdom shines brighter than gold.";
+            } catch (error) {
+                document.getElementById("quote").textContent = "The divine light always guides you.";
+            }
+            document.getElementById("quote").style.display = "block";
+        }
+    </script>
+</body>
+</html>
