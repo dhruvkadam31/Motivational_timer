@@ -18,7 +18,7 @@
             margin: auto;
         }
         .timer {
-            font-size: 180px;
+            font-size: 80px;
             font-weight: bold;
             padding: 20px;
             color: gold;
@@ -63,7 +63,7 @@
             margin-bottom: 15px;
         }
         input {
-            width: 40px;
+            width: 80px;
             padding: 12px;
             font-size: 18px;
             border: 2px solid gold;
@@ -95,10 +95,8 @@
         
         <div class="input-group">
             <label for="minutes">Minutes:</label>
-	<br/><br/>	
             <input type="number" id="minutes" value="1" min="0">
             <label for="seconds">Seconds:</label>
-	<br/><br/>
             <input type="number" id="seconds" value="0" min="0">
         </div>
 
@@ -120,22 +118,33 @@
         let interval;
         let paused = false;
         let remainingTime;
+        let endTime;
 
         function startTimer() {
             clearInterval(interval);
             let m = parseInt(document.getElementById("minutes").value);
             let s = parseInt(document.getElementById("seconds").value);
             remainingTime = (m * 60) + s;
-            let totalTime = remainingTime;
+
+            if (remainingTime <= 0) return;
 
             const display = document.getElementById("timer");
             const progress = document.getElementById("progress");
             const body = document.body;
 
-            body.style.background = "#444"; 
+            document.getElementById("quote").style.display = "none";
+            progress.style.width = "0%";
+            paused = false;
+            document.getElementById("pauseResume").textContent = "Pause";
+
+            const totalTime = remainingTime;
+            endTime = Date.now() + remainingTime * 1000;
 
             function updateTimer() {
-                if (!paused && remainingTime >= 0) {
+                if (!paused) {
+                    let now = Date.now();
+                    remainingTime = Math.max(0, Math.floor((endTime - now) / 1000));
+
                     let minutes = Math.floor(remainingTime / 60);
                     let seconds = remainingTime % 60;
                     display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -143,19 +152,21 @@
                     let percentage = ((totalTime - remainingTime) / totalTime) * 100;
                     progress.style.width = `${percentage}%`;
 
-                    let colorStep = Math.floor((totalTime - remainingTime) / totalTime * 255);
+                    let colorStep = Math.min(255, Math.floor((totalTime - remainingTime) / totalTime * 255));
                     body.style.background = `rgb(${colorStep}, 50, 50)`;
 
-                    if (remainingTime === 0) {
+                    if (remainingTime <= 0) {
                         clearInterval(interval);
+                        display.textContent = "00:00";
                         triggerSplashEffect();
                         fetchQuote();
                     }
-
-                    remainingTime--; // Ensures `00:00` is displayed before stopping
+                } else {
+                    endTime += 1000; // Adjust for pause duration
                 }
             }
 
+            updateTimer();
             interval = setInterval(updateTimer, 1000);
         }
 
